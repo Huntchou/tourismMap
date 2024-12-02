@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《澳门映画》摄影集打卡地图</title>
+    <!-- 引入Mapbox GL库 -->
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.12.0/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.12.0/mapbox-gl.js'></script>
+    <!-- 引入Google Fonts -->
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700&display=swap" rel="stylesheet"> -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            background-color: #f4f4f4;
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: #f2f2f2;
+            display: flex;
+            align-items: center;
+            padding: 10px 50px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            width: 100px;
+            margin-right: 20px;
+        }
+
+        h1 {
+            flex-grow: 1;
+            color: #333;
+            margin: 0;
+        }
+
+        .links a {
+            text-decoration: none;
+            color: #007BFF;
+            margin-left: 10px;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .footer {
+            margin: auto;
+            padding-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: left;
+            align-content: center;
+        }
+
+        button {
+            background-color: #007BFF;
+            border: none;
+            /* padding: 10px 20px; */
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+
+        .mapdiv {
+            width: 100vw;
+            height: 70vh;
+            margin: 0px auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .custom-popup {
+            display: flex;
+            align-items: center;
+            background-color: #fff;
+            border-radius: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            /* Prevents children from overflowing */
+            font-family: 'Noto Sans SC', sans-serif;
+            padding-right: 10px;
+        }
+
+        .popup-image {
+            width: 60px;
+            height: 60px;
+            /* 确保和 width 相同 */
+            object-fit: cover;
+            border-radius: 50%;
+            margin: 10px;
+        }
+
+        .popup-text {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .location-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .more-info {
+            font-size: 14px;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .more-info:hover {
+            text-decoration: underline;
+        }
+
+
+        #route-btn {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            z-index: 1;
+            border-radius: 5px;
+            font-size: 14px;
+            width: 140px;
+        }
+
+        .selected-marker {
+            border: 3px solid red;
+            /* 更加明显的高亮 */
+            border-radius: 50%;
+            /* 圆形标记 */
+        }
+
+        a {
+            display: block;
+            text-align: center;
+            margin-top: 10px;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        #selected-locations {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .mapboxgl-popup-content {
+            background: none;
+            /* 移除背景 */
+            border: none;
+            /* 移除边框 */
+            padding: 0;
+            /* 移除内边距 */
+            color: inherit;
+            /* 字体颜色继承父元素 */
+            font-family: inherit;
+            /* 字体样式继承父元素 */
+            width: auto;
+            /* 宽度自动 */
+            height: auto;
+            /* 高度自动 */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <img src="./logo.png" alt="Logo" class="logo" />
+        <h1>澳门旅游打卡地图</h1>
+        <div class="links">
+            <p>更多精彩资讯详情：</p>
+            <a href="https://www.macaotourism.gov.mo/zh-hans/" target="_blank" title="澳门特别行政区政府旅游局">
+                <img style="width: 120px;" class="" src="./logo1.svg" alt="澳门特别行政区政府旅游局">
+            </a>
+            <a href="https://www.icm.gov.mo/cn/" target="_blank" title="澳门特别行政区政府文化局">
+                <img style="width: 120px;" src="./logo2.png" alt="澳门特别行政区政府文化局">
+            </a>
+            <a href="https://www.dsat.gov.mo/dsat/index.aspx" target="_blank" title="澳门特别行政区政府交通事务局">
+                <img style="width: 120px;" src="./logo3.png" alt="澳门特别行政区政府交通事务局">
+            </a>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="mapdiv">
+            <p
+                style="position: absolute;top: 0; left: 0;margin: 0; z-index: 999;background-color: #f2f2f2;padding: 10px;text-align: left; height: 110px;width: 130px;">
+                点击地图上的图钉，查看景点照片。选择多个景点后，点击按钮生成最短路线。</p>
+            <div id="map"></div>
+        </div>
+
+        <div class="footer">
+            <button id="route-btn">生成最短路线</button>
+            <div id="selected-locations">已选地点：</div>
+        </div>
+
+    </div>
+    <script>
+        // 设置Mapbox访问令牌
+        mapboxgl.accessToken = 'pk.eyJ1IjoiaHVudGNob3UiLCJhIjoiY200MDBucXh1MjY1cjJpcHhuZm9yOXd2NyJ9.KklzWIU-5NNq7lz2Tn-fQA';
+
+        // 初始化地图，设置为澳门地图样式
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v11',
+            center: [113.5439, 22.1987], // 澳门的中心坐标
+            zoom: 13
+        });
+        let userCoords = null
+        // 确保地图完全加载完成
+        map.on('load', function () {
+            // 检查浏览器是否支持地理定位功能
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        console.log('1');
+                        userCoords = [position.coords.longitude, position.coords.latitude];
+                        console.log(userCoords);
+                        // 添加GeoJSON数据源
+                        map.addSource('user-location', {
+                            type: 'geojson',
+                            data: {
+                                type: 'FeatureCollection',
+                                features: [{
+                                    type: 'Feature',
+                                    geometry: {
+                                        type: 'Point',
+                                        coordinates: userCoords
+                                    }
+                                }]
+                            }
+                        });
+
+                        // 添加图层来显示位置
+                        map.addLayer({
+                            id: 'user-location-layer',
+                            type: 'symbol',
+                            source: 'user-location',
+                            layout: {
+                                'icon-image': 'marker-15',  // 确认图标名称正确，或者替换为默认存在的图标
+                                'icon-size': 5,
+                                'icon-allow-overlap': true
+                            }
+                        });
+                        // map.flyTo({ center: userCoords, zoom: 14 });
+                    },
+                    error => {
+                        console.error('Error getting location:', error.message);
+                        alert('无法获取您的位置');
+                    },
+                    {
+                        enableHighAccuracy: true, // 提高位置精度
+                        timeout: 5000, // 设置超时时间
+                        maximumAge: 0 // 禁止使用缓存位置
+                    }
+                );
+            } else {
+                alert("您的浏览器不支持地理定位");
+            }
+        });
+
+        // 示例景点及其图片（替换为您的摄影集）
+        const locations = [
+            {
+                name: "澳门塔",
+                coords: [113.5422, 22.17766],
+                image: "images/macau_tower.jpg",
+                marker: null,
+                text: '澳门旅游塔（葡文：Torre de Macau，英文：Macau Tower），港澳地区习称为观光塔，是一座位于中华人民共和国澳门特别行政区的高塔。'
+            },
+            {
+                name: "大三巴牌坊",
+                coords: [113.5403, 22.1915],
+                image: "images/ruins_of_st_paul.jpg",
+                marker: null
+            },
+            {
+                name: "威尼斯人",
+                coords: [113.5532, 22.1638],
+                image: "images/venetian_macau.jpg",
+                marker: null
+            },
+            {
+                name: "澳门城市大学",
+                coords: [113.5445, 22.1896],
+                image: "images/City University of Macau.jpg",
+                marker: null
+            },
+            {
+                name: "西湾大桥",
+                coords: [113.5310, 22.1850],
+                image: "images/Sai Wan Bridge.jpg",
+                marker: null
+            },
+            {
+                name: "金沙酒店群夜景",
+                coords: [113.5608, 22.1497],
+                image: "images/Golden Sands Hotel group night view.jpg",
+                marker: null
+            },
+            {
+                name: "雨夜伦敦人",
+                coords: [113.5600, 22.1486],
+                image: "images/The Rainy Night Londoner Hotel.jpg",
+                marker: null
+            },
+            {
+                name: "蓝调时刻的巴黎人",
+                coords: [113.5585, 22.1490],
+                image: "images/Parisians of the blues moment.jpg",
+                marker: null
+            },
+            {
+                name: "光洒新濠",
+                coords: [113.5664, 22.1480],
+                image: "images/Light sprinkled with melco.jpg",
+                marker: null
+            },
+        ];
+
+        // 存储已选景点坐标
+        const selectedLocations = [];
+
+        // 在地图上添加景点标记
+        locations.forEach(location => {
+            const marker = new mapboxgl.Marker()
+                .setLngLat(location.coords)
+                .setPopup(new mapboxgl.Popup().setHTML(`
+                    <div class="custom-popup">
+                        <img src="${location.image}" alt="${location.name}" class="popup-image">
+                        <div class="popup-text">
+                            <span class="location-name">${location.name}</span>
+                            <p class="location-description" style="display: none;">${location.text}</p>
+                            <a href="#" class="more-info" onclick="showFullImage(event)">查看详情 ></a>
+                        </div>
+                    </div>
+                `))
+                .addTo(map);
+
+            location.marker = marker;
+
+            // 为每个图钉添加点击事件，允许选择景点
+            marker.getElement().addEventListener('click', () => {
+                if (selectedLocations.includes(location.coords)) {
+                    selectedLocations.splice(selectedLocations.indexOf(location.coords), 1); // 取消选择
+                    marker.getElement().classList.remove('selected-marker'); // 恢复默认颜色
+                } else {
+                    selectedLocations.push(location.coords); // 选择
+                    marker.getElement().classList.add('selected-marker'); // 选中后变为红色
+                }
+                updateSelectedLocationsDisplay();
+            });
+        });
+
+        // 显示完整详情
+        function showFullImage(event) {
+            event.preventDefault();
+
+            const popupElement = event.target.closest('.custom-popup');
+            const imageElement = popupElement.querySelector('.popup-image');
+            const popupText = popupElement.querySelector('.popup-text');
+            const titleElement = popupElement.querySelector('.location-name');
+            const descriptionElement = popupElement.querySelector('.location-description');
+            const moreInfoLink = popupElement.querySelector('.more-info');
+
+            if (!popupElement.dataset.expanded || popupElement.dataset.expanded === 'false') {
+                titleElement.style.display = 'block'; // 确保标题可见
+                titleElement.style.fontSize = '18px';
+                titleElement.style.fontWeight = 'bold';
+                titleElement.style.marginBottom = '10px';
+
+                descriptionElement.style.display = 'block'; // 显示描述
+                descriptionElement.style.marginBottom = '10px'; // 添加间隔
+
+                imageElement.style.width = '60%'; // 图片宽度填满容器
+                imageElement.style.height = 'auto'; // 高度自适应
+                imageElement.style.borderRadius = '8px'; // 添加圆角
+
+                popupElement.style.width = '400px'; // 设置较大宽度
+                popupElement.style.height = '500px'
+                popupElement.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)'; // 添加阴影效果
+
+                moreInfoLink.textContent = '关闭详情 <'; // 改变链接文本为“关闭”
+                popupElement.dataset.expanded = 'true'; // 标记为已扩展
+            } else {
+                // 还原到原始状态
+                // titleElement.style.display = 'none'; // 隐藏标题
+                descriptionElement.style.display = 'none'; // 隐藏描述
+
+                popupElement.style.width = '189px'; // 设置较大宽度
+                popupElement.style.height = '80px'
+
+                imageElement.style.width = '60px';
+                imageElement.style.height = '60px';
+
+
+                moreInfoLink.textContent = '查看详情 >'; // 还原链接文本为“查看详情”
+                popupElement.dataset.expanded = 'false'; // 标记为未扩展
+            }
+        }
+
+        // 更新已选地点的显示
+        function updateSelectedLocationsDisplay() {
+            const selectedLocationNames = locations
+                .filter(location => selectedLocations.includes(location.coords))
+                .map(location => location.name);
+            document.getElementById('selected-locations').innerText = '已选地点：' + (selectedLocationNames.length > 0 ? selectedLocationNames.join(', ') : '无');
+        }
+
+        // 生成最短路线的按钮点击事件
+        document.getElementById('route-btn').addEventListener('click', () => {
+            if (selectedLocations.length < 1) {
+                alert('请至少选择一个景点');
+                return;
+            }
+
+            // 构建路线请求
+            // 将起点坐标加入到数组的开头
+            selectedLocations.unshift(userCoords);
+            const waypoints = selectedLocations.map(coords => `${coords[0]},${coords[1]}`).join(';');
+            const routeUrl = `https://api.mapbox.com/directions/v5/mapbox/driving/${waypoints}?alternatives=true&geometries=geojson&access_token=${mapboxgl.accessToken}`;
+
+            // 请求路线数据
+            fetch(routeUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const route = data.routes[0].geometry.coordinates;
+                    const routeLayer = {
+                        "id": "route",
+                        "type": "line",
+                        "source": {
+                            "type": "geojson",
+                            "data": {
+                                "type": "Feature",
+                                "geometry": {
+                                    "type": "LineString",
+                                    "coordinates": route
+                                }
+                            }
+                        },
+                        "paint": {
+                            "line-color": "#3887be",
+                            "line-width": 5
+                        }
+                    };
+
+                    // 清除之前的路线图层（如果有）
+                    if (map.getLayer("route")) {
+                        map.removeLayer("route");
+                        map.removeSource("route");
+                    }
+
+                    // 添加新路线图层
+                    map.addLayer(routeLayer);
+
+                    // 设置地图视角，以便显示整个路线
+                    map.fitBounds([route[0], route[route.length - 1]], { padding: 50 });
+                })
+                .catch(err => console.error('Error fetching directions:', err));
+        });
+    </script>
+
+</body>
+
+</html>
